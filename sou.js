@@ -1,8 +1,8 @@
 /*
 作者:D.Young
-主页：https://yyv.me/
+主页：https://blog.5iux.cn/
 github：https://github.com/5iux/sou
-日期：2019-07-26
+日期：2020-05-19
 版权所有，请勿删除
 */
 
@@ -10,31 +10,10 @@ $(document).ready(function() {
     //判断窗口大小，添加输入框自动完成
     var wid = $("body").width();
     if (wid < 640) {
-        $(".wd").attr('autocomplete', 'off');
-    }else{
-    	$(".wd").focus();
+        //$(".wd").attr('autocomplete', 'off');
+    } else {
+        $(".wd").focus();
     }
-    //按钮
-    $(".sou li").click(function() {
-        var dt = $(this).attr('data-s');
-        wd = $(".wd").val();
-        if (dt == "google") {
-            if (wd == "" || wd == null) {
-                window.location.href = "https://www.google.com/?hl=zh";
-            } else {
-                $(".t").val("g");
-                $("form").submit();
-            }
-        } else {
-            if (wd == "" || wd == null) {
-                window.location.href = "https://www.baidu.com/?tn=simple";
-            } else {
-                $(".t").val("b");
-                $("form").submit();
-            }
-        }
-
-    });
     //菜单点击
     $("#menu").click(function(event) {
         $(this).toggleClass('on');
@@ -45,55 +24,55 @@ $(document).ready(function() {
         $(".on").removeClass('on');
         $(".list").addClass('closed');
         $(".mywth").removeClass('hidden');
+        $('#word').hide();
     });
     $(".mywth").click(function(event) {
         var wt = $("body").width();
         if (wt < 750 || wt == 750) {
             //window.location.href = "https://tianqi.qq.com/";
-            window.location.href = "https://apip.weatherdt.com/h5.html?id=pjICbzAo4C";
+            window.location.href = "/weather/";
         }
     });
 });
 
+//关键词sug
+$(function() {
+    //当键盘键被松开时发送Ajax获取数据
+    $('.wd').keyup(function() {
+        var keywords = $(this).val();
+        if (keywords == '') { $('#word').hide(); return };
+        $.ajax({
+            url: 'https://suggestion.baidu.com/su?wd=' + keywords,
+            dataType: 'jsonp',
+            jsonp: 'cb', //回调函数的参数名(键值)key
+            // jsonpCallback: 'fun', //回调函数名(值) value
+            beforeSend: function() {
+               // $('#word').append('<li>正在加载。。。</li>');
+            },
+            success: function(data) {
+                $('#word').empty().show();
+                if (data.s == '') {
+                    //$('#word').append('<div class="error">Not find  "' + keywords + '"</div>');
+                    $('#word').hide();
+                }
+                $.each(data.s, function() {
+                    $('#word').append('<li><svg class="icon" style=" width: 15px; height: 15px; opacity: 0.5;" aria-hidden="true"><use xlink:href="#icon-sousuo"></use></svg> ' + this + '</li>');
+                })
+            },
+            error: function() {
+                $('#word').empty().show();
+                //$('#word').append('<div class="click_work">Fail "' + keywords + '"</div>');
+                $('#word').hide();
+            }
+        })
+    })
+    //点击搜索数据复制给搜索框
+    $(document).on('click', '#word li', function() {
+        var word = $(this).text();
+        $('.wd').val(word);
+        $('#word').hide();
+        $("form").submit();
+        // $('#texe').trigger('click');触发搜索事件
+    })
 
-/*天气插件开始
-天气插件api请在wea目录中index.php修改
-申请地址：和风天气-https://dev.heweather.com/
-*/
-$.ajax({
-    url: '/wea/',
-    dataType: 'json',
-    error: function() {
-        console.log('天气插件网络错误！');
-    },
-    success: function(res) {
-        //判断夜晚
-        var now = new Date(),
-            hour = now.getHours();
-        if (hour < 18) { myday = "d"; } else { myday = "n"; }
-        //天气
-        $('.mywth').append(res.HeWeather6[0].basic.location + ' <img class="wea" src="../wea/icon/' + res.HeWeather6[0].now.cond_code + myday + '.png"> ' + res.HeWeather6[0].now.cond_txt + ' ' + res.HeWeather6[0].now.tmp + '℃ ' + res.HeWeather6[0].now.wind_dir);
-
-        $('.wea_hover').css('background-image', 'url(../wea/icon/bg/' + res.HeWeather6[0].now.cond_code + myday + '.png)');
-        //今日天气
-        $('.wea_top').append('<span class="city"><b>' + res.HeWeather6[0].basic.location + '</b> ' + res.HeWeather6[0].update.loc + ' 更新</span><span class="img" style="background:url(../wea/icon/' + res.HeWeather6[0].now.cond_code + myday + '.png) no-repeat center/contain;"></span> <span class="tem"><b>' + res.HeWeather6[0].now.tmp + '℃</b>' + res.HeWeather6[0].now.cond_txt + '</span><span class="air">紫外线指数：' + res.HeWeather6[0].lifestyle[5].brf + '<br>相对湿度：' + res.HeWeather6[0].now.hum + '%<br>' + res.HeWeather6[0].now.wind_dir + '：' + res.HeWeather6[0].now.wind_sc + '级</span><span class="air_tips">' + res.HeWeather6[0].lifestyle[3].txt + '</span>');
-        //今日指数
-        $('.wea_con ul').append('<li>舒适度指数<br><b>' + res.HeWeather6[0].lifestyle[0].brf + '</b></li>');
-        $('.wea_con ul').append('<li>穿衣指数<br><b>' + res.HeWeather6[0].lifestyle[1].brf + '</b></li>');
-        $('.wea_con ul').append('<li>感冒指数<br><b>' + res.HeWeather6[0].lifestyle[2].brf + '</b></li>');
-        $('.wea_con ul').append('<li>运动指数<br><b>' + res.HeWeather6[0].lifestyle[3].brf + '</b></li>');
-        $('.wea_con ul').append('<li>旅游指数<br><b>' + res.HeWeather6[0].lifestyle[4].brf + '</b></li>');
-        $('.wea_con ul').append('<li>紫外线指数<br><b>' + res.HeWeather6[0].lifestyle[5].brf + '</b></li>');
-        $('.wea_con ul').append('<li>洗车指数<br><b>' + res.HeWeather6[0].lifestyle[6].brf + '</b></li>');
-        $('.wea_con ul').append('<li>空气指数<br><b>' + res.HeWeather6[0].lifestyle[7].brf + '</b></li>');
-
-        //未来3天天气
-        $('.wea_foot ul').append('<li>' + res.HeWeather6[0].daily_forecast[0].date + '<br><img src="../wea/icon/' + res.HeWeather6[0].daily_forecast[0].cond_code_d + myday + '.png"><br><b>' + res.HeWeather6[0].daily_forecast[0].cond_txt_d + '</b><br><i>' + res.HeWeather6[0].daily_forecast[0].tmp_min + '°/' + res.HeWeather6[0].daily_forecast[0].tmp_max + '°' + '</i></li>');
-
-        $('.wea_foot ul').append('<li>' + res.HeWeather6[0].daily_forecast[1].date + '<br><img src="../wea/icon/' + res.HeWeather6[0].daily_forecast[1].cond_code_d + myday + '.png"><br><b>' + res.HeWeather6[0].daily_forecast[1].cond_txt_d + '</b><br><i>' + res.HeWeather6[0].daily_forecast[1].tmp_min + '°/' + res.HeWeather6[0].daily_forecast[1].tmp_max + '°' + '</i></li>');
-
-        $('.wea_foot ul').append('<li>' + res.HeWeather6[0].daily_forecast[2].date + '<br><img src="../wea/icon/' + res.HeWeather6[0].daily_forecast[2].cond_code_d + myday + '.png"><br><b>' + res.HeWeather6[0].daily_forecast[2].cond_txt_d + '</b><br><i>' + res.HeWeather6[0].daily_forecast[2].tmp_min + '°/' + res.HeWeather6[0].daily_forecast[2].tmp_max + '°' + '</i></li>');
-    }
-});
-
-/*天气插件结束*/
+})
